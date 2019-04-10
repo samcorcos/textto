@@ -1,7 +1,9 @@
 require('dotenv').config()
 const functions = require('firebase-functions')
+const cors = require('cors')({ origin: true })
+const bodyParser = require('body-parser')
 
-const { db } = require('../../lib/firebase')
+const { db, dbRest } = require('../../lib/firebase')
 
 const client = require('twilio')(process.env.TWILIO_SID, process.env.TWILIO_AUTH_TOKEN)
 
@@ -80,7 +82,7 @@ module.exports.selectPhoneNumber = functions.https.onCall(async (data, context) 
     const purchasedNumber = await client.incomingPhoneNumbers.create({
       phoneNumber: phoneNumber.phoneNumber
     })
-    console.info('purchasedNumber', purchasedNumber)
+    console.info('purchasedNumber', JSON.stringify(purchasedNumber))
 
     // Now that we have purchased the number we need to set up the webhook.
     // https://www.twilio.com/docs/phone-numbers/api/incoming-phone-numbers#update-an-incomingphonenumber-resource
@@ -89,7 +91,10 @@ module.exports.selectPhoneNumber = functions.https.onCall(async (data, context) 
     })
 
     await db.collection('users').doc(context.auth.uid).set({
-      phone: purchasedNumber.phoneNumber
+      phone: purchasedNumber.phoneNumber,
+      // NOTE this is a weird hack because Firestore thinks there is a constructor in the response
+      // even though there is not.
+      purchasedNumber: JSON.parse(JSON.stringify(purchasedNumber))
     }, { merge: true })
     return {
       message: 'Success!'
@@ -99,4 +104,81 @@ module.exports.selectPhoneNumber = functions.https.onCall(async (data, context) 
   }
 
   throw new functions.https.HttpsError('invalid-argument', 'Must include a phone number in your request.')
+})
+
+module.exports.updateCallForwarding = functions.https.onCall(async (data, context) => {
+  if (!context.auth.uid) {
+    throw new functions.https.HttpsError('unauthenticated', 'Must be authenticated')
+  }
+
+  const { callForwardingPhone } = data
+  console.info('callForwardingPhone', callForwardingPhone)
+
+  if (!callForwardingPhone) {
+    throw new functions.https.HttpsError('invalid-argument', 'Must include a forwarding number')
+  }
+
+  if (!/^\+1[0-9]{10}$/g.test(callForwardingPhone)) {
+    throw new functions.https.HttpsError('invalid-argument', 'Forwarding number is not in correct format')
+  }
+
+  // first get the account
+  let account
+  try {
+    const res = await dbRest.collection('users').doc(context.auth.uid).get()
+    account = res.data()
+  } catch (err) {
+    console.error(err)
+  }
+
+  if (account) {
+    // check if the account already has call forwarding
+    try {
+      const res = await db.collection('users').doc(context.auth.uid).set({
+        callForwardingPhone
+      }, { merge: true })
+      console.info('set result', res)
+    } catch (err) {
+      console.error(err)
+    }
+
+    await client.incomingPhoneNumbers(account.purchasedNumber.sid).update({
+      voiceUrl: 'https://us-central1-textto-189ae.cloudfunctions.net/forwardCall'
+    })
+  }
+
+  return {
+    message: 'Success!'
+  }
+})
+
+// https://www.twilio.com/docs/voice/tutorials/call-forwarding-nodejs-express?code-sample=code-zipcodes-seeder&code-language=Node.js&code-sdk-version=default
+// https://www.twilio.com/docs/voice/twiml/dial?code-sample=code-simple-dial&code-language=Node.js&code-sdk-version=3.x
+// https://stackoverflow.com/questions/2965587/valid-content-type-for-xml-html-and-xhtml-documents
+module.exports.forwardCall = functions.https.onRequest(async (request, response) => {
+  return bodyParser.urlencoded({ extended: false })(request, response, async () => {
+    console.info('body', request.body)
+    const VoiceResponse = require('twilio').twiml.VoiceResponse
+    const vr = new VoiceResponse()
+    // TODO get number from database
+
+    // this is the number that was called
+    const called = request.body.Called
+    // get the user that is associated with this number
+    let account
+    try {
+      const res = await db.collection('users').where('phone', '==', called).get()
+      res.forEach(r => { account = r.data() })
+    } catch (err) {
+      console.error(err)
+    }
+
+    vr.dial(account.callForwardingPhone)
+
+    console.info('twiml query', vr.toString())
+
+    return cors(request, response, () => {
+      return response.status(200).contentType('text/xml').send(vr.toString())
+    })
+  })
 })

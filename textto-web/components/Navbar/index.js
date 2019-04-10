@@ -72,9 +72,16 @@ class Navbar extends React.Component {
             <div className='brand-title'>TextTo</div>
           </div>
         </Link>
-        <Link href={{ pathname: '/pricing' }}>
-          <a className='anchor'>Pricing</a>
-        </Link>
+        <div className='row'>
+          {this.context.currentUser.uid && (
+            <Link href={{ pathname: '/profile' }}>
+              <a className='anchor'>Dashboard</a>
+            </Link>
+          )}
+          <Link href={{ pathname: '/pricing' }}>
+            <a className='anchor'>Pricing</a>
+          </Link>
+        </div>
         <div className='navbar-action-container'>
           {SignUpSignIn(this)}
         </div>

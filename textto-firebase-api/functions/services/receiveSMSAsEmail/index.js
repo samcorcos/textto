@@ -61,11 +61,12 @@ module.exports.receiveSMSAsEmail = functions.https.onRequest(async (request, res
     text: content,
     html: content
   }
+  console.info('email message', msg)
   const result = await sgMail.send(msg)
 
   console.info('email result', result)
 
   return cors(request, response, () => {
-    return response.status(200).send({ message: 'Success!' })
+    return response.status(200).contentType('text/html').send('<html><body>Success!</body></html>')
   })
 })

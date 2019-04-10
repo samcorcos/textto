@@ -2,6 +2,7 @@ import React from 'react'
 import {
   Layout,
   Button,
+  Input,
   Data
 } from '@corcos/components'
 import Link from 'next/link'
@@ -18,7 +19,7 @@ import Signup from '../../components/Signup'
 import Login from '../../components/Login'
 
 import Context from '../../lib/context'
-import { db } from '../../lib/firebase'
+import { db, firebase } from '../../lib/firebase'
 
 // determines what to render if the user is not logged in
 const SignUpOrLogIn = (self) => {
@@ -136,7 +137,10 @@ class WithPhoneNumber extends React.Component {
 class Profile extends React.Component {
   constructor (props) {
     super(props)
-    this.state = {}
+    this.state = {
+      forwarding: Boolean(props.user.callForwardingPhone),
+      callForwardingPhone: '+1'
+    }
   }
 
   static getInitialProps = ({ query }) => {
@@ -145,13 +149,38 @@ class Profile extends React.Component {
 
   static contextType = Context
 
+  _handleChange = (v) => {
+    // if the first characters are anything other than +1, alert
+    if (!/^\+1/g.test(v)) {
+      window.alert('Your phone number must start with +1')
+    }
+    // phone numbers cannot be more than 12 characters
+    if (v.length > 12) {
+      return null
+    }
+    // only allow characters that are digits
+    if (/^\+1[0-9]*$/g.test(v)) {
+      this.setState({ callForwardingPhone: v })
+    }
+  }
+
+  _handleSubmit = async () => {
+    try {
+      await firebase.functions().httpsCallable('updateCallForwarding')({
+        callForwardingPhone: this.state.callForwardingPhone
+      })
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
   render () {
     return (
       <Format>
         <Head />
         <Navbar />
         <Layout>
-          <div className='row'>
+          <div className='row' style={{ alignItems: 'center' }}>
             <div style={{ marginRight: 30 }}>
               {this.props.user.email}
             </div>
@@ -160,6 +189,22 @@ class Profile extends React.Component {
                 this.context.signOut()
                 this.props.router.push('/')
               }}>Log out</a>
+            </div>
+            <div style={{ flexDirection: 'row', alignItems: 'center', marginLeft: 30, border: `1px solid ${colors.grey[200]}`, borderRadius: 3, padding: 10 }}>
+              <div>
+                Call Forwarding?
+              </div>
+              {this.props.user.callForwardingPhone && <div style={{ marginLeft: 15 }}>{this.props.user.callForwardingPhone}</div>}
+              {this.state.forwarding && !this.props.user.callForwardingPhone && (
+                <>
+                  <input checked={this.state.forwarding} onChange={() => this.setState({ forwarding: !this.state.forwarding })} type='checkbox' />
+                  <div className='row' style={{ alignItems: 'center', marginLeft: 15 }}>
+                    <Input label='Must be in format: +14153882931' placeholder='E.g. +14154332443' onChange={v => this._handleChange(v)} value={this.state.callForwardingPhone} />
+                    <div style={{ width: 15 }} />
+                    <Button disabled={this.state.callForwardingPhone.length < 12} title='Submit' onClick={() => this._handleSubmit()} />
+                  </div>
+                </>
+              )}
             </div>
           </div>
           <div>
