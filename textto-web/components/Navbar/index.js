@@ -68,7 +68,7 @@ class Navbar extends React.Component {
       <nav className='navbar'>
         <Link href='/'>
           <div className='brand-container'>
-            <img src='/static/disco.svg' className='logo' />
+            <img src='/static/phone-email-sms.svg' className='logo' />
             <div className='brand-title'>TextTo</div>
           </div>
         </Link>

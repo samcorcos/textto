@@ -3,11 +3,14 @@ import {
   colors
 } from '@corcos/lib'
 import {
-  Layout,
-  Input,
-  Button
+  Layout
 } from '@corcos/components'
 import { withRouter } from 'next/router'
+
+import {
+  Button,
+  Input
+} from '../'
 
 import firebase from '../../lib/firebase'
 import Context from '../../lib/context'
