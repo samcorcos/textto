@@ -23,10 +23,10 @@ const SignUpSignIn = (self) => {
   if (!self.context.currentUser.uid) {
     return (
       <div className='auth-container'>
-        <Link href={{ pathname: '/profile', query: { type: 'login' } }}>
+        <Link href={{ pathname: '/profile', query: { type: 'logIn' } }}>
           <a className='anchor'>Sign in</a>
         </Link>
-        <Link href={{ pathname: '/profile', query: { type: 'signup' } }}>
+        <Link href={{ pathname: '/profile', query: { type: 'signUp' } }}>
           <Button style={buttonStyle} onClick={() => {}} title='Sign up' />
         </Link>
 

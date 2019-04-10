@@ -222,6 +222,18 @@ class Profile extends React.Component {
 class WithData extends React.Component {
   static contextType = Context
 
+  // if there are query params for setting the login type, set that to context
+  componentDidMount () {
+    this.context.set('signUpOrLogIn', this.props.router.query.type)
+  }
+
+  // if the query params change, update context
+  componentDidUpdate (prevProps) {
+    if (prevProps.router.query.type !== this.props.router.query.type) {
+      this.context.set('signUpOrLogIn', this.props.router.query.type)
+    }
+  }
+
   render () {
     if (!this.context.currentUser.uid) {
       return (
