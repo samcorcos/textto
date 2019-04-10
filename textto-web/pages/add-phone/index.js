@@ -29,7 +29,7 @@ const selectPhoneNumber = async (phoneNumber, setState, navigate) => {
       await firebase.functions().httpsCallable('selectPhoneNumber')({
         phoneNumber
       })
-      navigate('/dashboard')
+      navigate('/profile')
     } catch (err) {
       console.error(err)
     }
@@ -48,7 +48,7 @@ class PhoneNumber extends React.Component {
   render () {
     const { friendlyName, locality, region } = this.props.phoneNumber
     return (
-      <div className='container'>
+      <div key={`${friendlyName}-${locality}`} className='container'>
         {this.state.loading && <Loading loading />}
         <div>
           <div className='number'>{friendlyName}</div>
@@ -83,7 +83,6 @@ const getAvailablePhoneNumbers = _.debounce(async (setState, areaCode) => {
     const { data } = await firebase.functions().httpsCallable('availablePhoneNumbers')({
       areaCode
     })
-    console.log(data)
     setState({ availablePhoneNumbers: data.availablePhoneNumbers })
   } catch (err) {
     console.error(err)
