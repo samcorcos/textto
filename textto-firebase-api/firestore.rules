@@ -1,0 +1,17 @@
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /users/{userId} {
+      // allow a user to view their own documents
+      allow read: if request.auth.uid == userId;
+      allow write: if false;
+      match /{document=**} {
+        // allow a user to view their own documents
+        allow read: if request.auth.uid == userId;
+        allow write: if false;
+      }
+    }
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
