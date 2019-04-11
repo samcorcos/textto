@@ -5,8 +5,15 @@ const bodyParser = require('body-parser')
 
 const { db, dbRest } = require('../../lib/firebase')
 
+const sgMail = require('@sendgrid/mail')
+sgMail.setApiKey(process.env.SENDGRID_API_KEY)
+
 const client = require('twilio')(process.env.TWILIO_SID, process.env.TWILIO_AUTH_TOKEN)
 
+/**
+ * Checks with Twilio for a list of available phone numbers given a particular area code.
+ * Returns a list of phone numbers.
+ */
 module.exports.availablePhoneNumbers = functions.https.onCall(async (data, context) => {
   // get the search prefix from the request body. User may request that their number start with
   // something like '415'
@@ -55,6 +62,10 @@ module.exports.availablePhoneNumbers = functions.https.onCall(async (data, conte
   throw new functions.https.HttpsError('invalid-argument', 'Must include an area code in your request.')
 })
 
+/**
+ * When a user selects a phone number that is available, associate that number with the customer
+ * and update the database.
+ */
 module.exports.selectPhoneNumber = functions.https.onCall(async (data, context) => {
   const { phoneNumber } = data
   /*  phoneNumber should be in this shape:
@@ -106,6 +117,9 @@ module.exports.selectPhoneNumber = functions.https.onCall(async (data, context) 
   throw new functions.https.HttpsError('invalid-argument', 'Must include a phone number in your request.')
 })
 
+/**
+ * Sets the customer's phone number to use call forwarding.
+ */
 module.exports.updateCallForwarding = functions.https.onCall(async (data, context) => {
   if (!context.auth.uid) {
     throw new functions.https.HttpsError('unauthenticated', 'Must be authenticated')
@@ -152,10 +166,14 @@ module.exports.updateCallForwarding = functions.https.onCall(async (data, contex
   }
 })
 
-// https://www.twilio.com/docs/voice/tutorials/call-forwarding-nodejs-express?code-sample=code-zipcodes-seeder&code-language=Node.js&code-sdk-version=default
-// https://www.twilio.com/docs/voice/twiml/dial?code-sample=code-simple-dial&code-language=Node.js&code-sdk-version=3.x
-// https://stackoverflow.com/questions/2965587/valid-content-type-for-xml-html-and-xhtml-documents
+/**
+ * When Twilio receives an incoming voice call to a number in our control, forward that
+ * number to the forwarding phone number in the database.
+ */
 module.exports.forwardCall = functions.https.onRequest(async (request, response) => {
+  // https://www.twilio.com/docs/voice/tutorials/call-forwarding-nodejs-express?code-sample=code-zipcodes-seeder&code-language=Node.js&code-sdk-version=default
+  // https://www.twilio.com/docs/voice/twiml/dial?code-sample=code-simple-dial&code-language=Node.js&code-sdk-version=3.x
+  // https://stackoverflow.com/questions/2965587/valid-content-type-for-xml-html-and-xhtml-documents
   return bodyParser.urlencoded({ extended: false })(request, response, async () => {
     console.info('body', request.body)
     const VoiceResponse = require('twilio').twiml.VoiceResponse
@@ -173,7 +191,24 @@ module.exports.forwardCall = functions.https.onRequest(async (request, response)
       console.error(err)
     }
 
-    vr.dial(account.callForwardingPhone)
+    // if there is a call forwarding address, forward the call
+    if (account.callForwardingPhone) {
+      vr.dial(account.callForwardingPhone)
+    } else {
+      // otherwise send an email to the account owner letting them know that someone attempted to call
+      // and they do not have a call forwarding number set up.
+      const content = `Missed call from: ${request.body.From}. To forward these calls to your phone number, please enable call forwarding https://textto.net/profile`
+      const msg = {
+        to: account.email,
+        from: `${account.email}@textto.net`,
+        subject: `Missed call from ${request.body.From}`,
+        text: content,
+        html: content
+      }
+      console.info('email message', msg)
+      const result = await sgMail.send(msg)
+      console.info('email result', result)
+    }
 
     console.info('twiml query', vr.toString())
 
