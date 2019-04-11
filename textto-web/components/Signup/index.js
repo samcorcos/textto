@@ -86,7 +86,7 @@ class Signup extends React.Component {
             <div className='terms-row'>
               <input checked={this.state.terms} onChange={e => this.setState({ terms: e.target.checked })} type='checkbox' className='checkbox' />
               <div className='terms'>
-                I agree to the&nbsp;<Link href='#'><a>Terms and Conditions</a></Link>
+                I agree to the&nbsp;<Link href='/terms'><a>Terms and Conditions</a></Link>
               </div>
             </div>
             <div className='line' />
