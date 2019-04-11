@@ -2,14 +2,12 @@ import React from 'react'
 import {
   colors
 } from '@corcos/lib'
-import {
-  Layout
-} from '@corcos/components'
 import Link from 'next/link'
 import { withRouter } from 'next/router'
 
 import {
   Button,
+  Layout,
   Input
 } from '../'
 

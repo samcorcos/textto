@@ -2,12 +2,10 @@ import React from 'react'
 import {
   colors
 } from '@corcos/lib'
-import {
-  Layout
-} from '@corcos/components'
 
 import {
   Head,
+  Layout,
   Format,
   Footer,
   Navbar

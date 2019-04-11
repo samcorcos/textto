@@ -1,14 +1,12 @@
 import React from 'react'
 import {
-  Layout
-} from '@corcos/components'
-import {
   colors
 } from '@corcos/lib'
 
 import {
   Head,
   Navbar,
+  Layout,
   Footer,
   Button,
   Format
@@ -133,34 +131,63 @@ class PricingBox extends React.Component {
   }
 }
 
+class PriceRow extends React.Component {
+  render () {
+    return (
+      <Layout>
+        <h1 className='title'>
+          Pricing
+        </h1>
+        <div className='pricing-box-row'>
+          {pricingData.map(d => {
+            return <PricingBox {...d} />
+          })}
+        </div>
+
+        <style jsx>{`
+          .pricing-box-row {
+            flex-direction: row;
+            justify-content: center;
+          }
+          .title {
+            font-size: 2em;
+            text-align: center;
+            margin-bottom: 30px;
+          }
+        `}</style>
+      </Layout>
+    )
+  }
+}
+
+class Faq extends React.Component {
+  render () {
+    return (
+      <div>
+        <div className='title'>
+          Frequently Asked Questions
+        </div>
+
+        <style jsx>{`
+          .title {
+            font-size: 2em;
+            text-align: center;
+            margin-bottom: 30px;
+          }  
+        `}</style>
+      </div>
+    )
+  }
+}
+
 class Pricing extends React.Component {
   render () {
     return (
       <Format>
         <Head />
         <Navbar />
-        <Layout>
-          <h1 className='title'>
-            Pricing
-          </h1>
-          <div className='pricing-box-row'>
-            {pricingData.map(d => {
-              return <PricingBox {...d} />
-            })}
-          </div>
-
-          <style jsx>{`
-            .pricing-box-row {
-              flex-direction: row;
-              justify-content: center;
-            }
-            .title {
-              font-size: 2em;
-              text-align: center;
-              margin-bottom: 30px;
-            }
-          `}</style>
-        </Layout>
+        <PriceRow {...this.props} />
+        <Faq {...this.props} />
         <Footer />
       </Format>
     )

@@ -1,13 +1,13 @@
 import React from 'react'
 import {
-  Data,
-  Layout
+  Data
 } from '@corcos/components'
 
 import { db } from '../../lib/firebase'
 
 import {
   Head,
+  Layout,
   Format,
   Navbar
 } from '../../components'

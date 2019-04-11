@@ -1,11 +1,9 @@
 import React from 'react'
-import {
-  Layout
-} from '@corcos/components'
 
 import {
   Head,
   Format,
+  Layout,
   Footer,
   Navbar
 } from '../../components'

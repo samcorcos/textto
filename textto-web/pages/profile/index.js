@@ -1,7 +1,5 @@
 import React from 'react'
 import {
-  Layout,
-  Button,
   Input,
   Data
 } from '@corcos/components'
@@ -11,8 +9,10 @@ import { colors } from '@corcos/lib'
 
 import {
   Head,
+  Layout,
   Format,
   Footer,
+  Button,
   Navbar
 } from '../../components'
 import Signup from '../../components/Signup'

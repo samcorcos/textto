@@ -1,10 +1,7 @@
 import React from 'react'
 import {
-  Layout,
   Data,
-  Loading,
-  Button,
-  Input
+  Loading
 } from '@corcos/components'
 import {
   colors
@@ -15,6 +12,9 @@ import { withRouter } from 'next/router'
 import {
   Head,
   Navbar,
+  Input,
+  Layout,
+  Button,
   Format
 } from '../../components'
 
