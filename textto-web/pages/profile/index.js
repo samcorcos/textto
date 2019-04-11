@@ -134,6 +134,41 @@ class WithPhoneNumber extends React.Component {
   }
 }
 
+class UpgradeHeader extends React.Component {
+  render () {
+    return (
+      <div className='container'>
+        <div className='title col'>
+          <div className='start'>Trial Account</div>
+          <div className='messages'>{100 - (this.props.user.messageCount || 0)} messages remaining</div>
+          <div className='days'>{30} days remaining</div>
+        </div>
+        <Link href='/upgrade'>
+          <Button title='Upgrade' />
+        </Link>
+
+        <style jsx>{`
+          .start {
+            font-size: 1.3em;
+          }
+          .title {
+            margin: 10px;
+          }
+          .container {
+            background-color: ${colors.grey[200]};
+            border-bottom: 1px solid ${colors.grey[400]};
+            height: 100px;
+            width: 100%;
+            align-items: center;
+            justify-content: center;
+            flex-direction: row;
+          }  
+        `}</style>
+      </div>
+    )
+  }
+}
+
 class Profile extends React.Component {
   constructor (props) {
     super(props)
@@ -179,6 +214,7 @@ class Profile extends React.Component {
       <Format>
         <Head />
         <Navbar />
+        <UpgradeHeader {...this.props} />
         <Layout>
           <div className='row' style={{ alignItems: 'center' }}>
             <div style={{ marginRight: 30 }}>
@@ -194,10 +230,10 @@ class Profile extends React.Component {
               <div>
                 Call Forwarding?
               </div>
+              {!this.props.user.callForwardingPhone && <input checked={this.state.forwarding} onChange={() => this.setState({ forwarding: !this.state.forwarding })} type='checkbox' />}
               {this.props.user.callForwardingPhone && <div style={{ marginLeft: 15 }}>{this.props.user.callForwardingPhone}</div>}
               {this.state.forwarding && !this.props.user.callForwardingPhone && (
                 <>
-                  <input checked={this.state.forwarding} onChange={() => this.setState({ forwarding: !this.state.forwarding })} type='checkbox' />
                   <div className='row' style={{ alignItems: 'center', marginLeft: 15 }}>
                     <Input label='Must be in format: +14153882931' placeholder='E.g. +14154332443' onChange={v => this._handleChange(v)} value={this.state.callForwardingPhone} />
                     <div style={{ width: 15 }} />
