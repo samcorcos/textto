@@ -6,6 +6,7 @@ import {
 import Link from 'next/link'
 import { withRouter } from 'next/router'
 import { colors } from '@corcos/lib'
+import moment from 'moment'
 
 import {
   Head,
@@ -138,12 +139,13 @@ class WithPhoneNumber extends React.Component {
 class UpgradeHeader extends React.Component {
   render () {
     if (this.props.user.active) return null
+    const daysToExpiration = (30 - Math.abs(moment(this.props.user.activationDate.toDate()).diff(moment(), 'days')))
     return (
       <div className='container'>
         <div className='title col'>
           <div className='start'>Trial Account</div>
           <div className='messages'>{100 - (this.props.user.messageCount || 0)} messages remaining</div>
-          <div className='days'>{30} days remaining</div>
+          <div className='days'>{daysToExpiration} days remaining</div>
         </div>
         <Link href='/upgrade'>
           <Button title='Upgrade' />

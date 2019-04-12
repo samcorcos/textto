@@ -2,31 +2,19 @@ require('dotenv').config()
 const { parser } = require('../../lib/parser')
 const functions = require('firebase-functions')
 const cors = require('cors')({ origin: true })
-const moment = require('moment')
 var replyParser = require('node-email-reply-parser')
 
 const { db } = require('../../lib/firebase')
+const { checkTrialPeriod } = require('../../lib/checkTrialPeriod.js')
+
+const sgMail = require('@sendgrid/mail')
+sgMail.setApiKey(process.env.SENDGRID_API_KEY)
 
 // NOTE this is the number for Evan Baehr
 // TODO this needs to be extracted into the database
 // const twilioNumber = '+15129602039'
 
 const client = require('twilio')(process.env.TWILIO_SID, process.env.TWILIO_AUTH_TOKEN)
-
-// checks the activation date against the trial period, returns "isValid"
-const checkTrialPeriod = (activationDate) => {
-  const trialPeriodDays = 30
-
-  const a = moment(activationDate.toDate())
-  const b = moment()
-  const days = a.diff(b, 'days')
-
-  console.info('days since activation', Math.abs(days))
-
-  // if the days between the trial period and today is greater than the length of the trial,
-  // return false (not valid), otherwise return true (still valid)
-  return (days < trialPeriodDays)
-}
 
 module.exports.sendEmailAsSMS = functions.https.onRequest(async (request, response) => {
   const emailContent = request.body.toString('utf8')
@@ -89,23 +77,43 @@ module.exports.sendEmailAsSMS = functions.https.onRequest(async (request, respon
     })
   }
 
-  const { messageCount, activationDate, active } = user
-  
-  const isValid = checkTrialPeriod(activationDate)
+  const [phone, name] = subject.split(',').map(v => v.trim())
 
-  console.log('isvalid', isValid)
+  const { messageCount, activationDate, active } = user
+
+  const isValid = checkTrialPeriod(activationDate)
 
   // if the user is on the free plan and has exceeded the free plan messaging limit (100) or
   // is past the trial period (30 days), reject
   if (!active && !isValid) {
-    return response.status(401).send({ message: 'User has exceeded the free plan trial period.' })
+    const content = `Your account has exceeded the trial period of 30 days and your message to ${phone} was not sent. Please upgrade your account to send additional messages https://textto.net/upgrade`
+    const msg = {
+      to: user.email,
+      from: `support@textto.net`,
+      subject: `TextTo.net trial period exceeded`,
+      text: content,
+      html: content
+    }
+    console.info('email message', msg)
+    const result = await sgMail.send(msg)
+    console.info('email result', result)
+    return response.status(402).send({ message: 'User has exceeded the free plan trial period.' })
   }
 
-  if (!active && (messageCount > 99)) {
+  if (!active && ((messageCount || 0) > 99)) {
+    const content = `Your account has exceeded the trial account messaging limit of 100 messages and your message to ${phone} was not sent. Please upgrade your account to send additional messages https://textto.net/upgrade`
+    const msg = {
+      to: user.email,
+      from: `support@textto.net`,
+      subject: `TextTo.net trial message limit exceeded`,
+      text: content,
+      html: content
+    }
+    console.info('email message', msg)
+    const result = await sgMail.send(msg)
+    console.info('email result', result)
     return response.status(402).send({ message: 'User has exceeded the free plan message count.' })
   }
-
-  const [phone, name] = subject.split(',').map(v => v.trim())
 
   try {
     await db.collection('users').doc(userId).collection('people').doc(phone).set({
@@ -126,12 +134,26 @@ module.exports.sendEmailAsSMS = functions.https.onRequest(async (request, respon
   const body = fragments[0].getContent()
   console.info('body', body)
 
-  await client.messages
-    .create({
-      body,
-      from: user.phone,
-      to: phone
-    })
+  // send the SMS
+  try {
+    await client.messages
+      .create({
+        body,
+        from: user.phone,
+        to: phone
+      })
+  } catch (err) {
+    console.error(err)
+  }
+
+  // record the SMS by adding to message count
+  try {
+    await db.collection('users').doc(userId).set({
+      messageCount: ((Number(messageCount) || 0) + 1)
+    }, { merge: true })
+  } catch (err) {
+    console.error(err)
+  }
 
   return cors(request, response, () => {
     return response.status(200).send({ message: 'Success!' })
