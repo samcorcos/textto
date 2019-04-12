@@ -13,6 +13,8 @@ module.exports.receiveSMSAsEmail = functions.https.onRequest(async (request, res
 
   const variables = request.body
 
+  console.info('variables', variables)
+
   // the phone number this was sent to
   const to = decodeURIComponent(variables.To)
   console.info('to', to)
