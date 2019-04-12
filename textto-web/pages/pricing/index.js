@@ -5,6 +5,7 @@ import {
 import {
   Data
 } from '@corcos/components'
+import { withRouter } from 'next/router'
 import Link from 'next/link'
 import StripeCheckout from 'react-stripe-checkout'
 
@@ -98,6 +99,8 @@ export class PricingBox extends React.Component {
       console.error(err)
     }
     this.setState({ loading: false })
+    window.alert('Your account has been upgraded!')
+    this.props.router.push('/profile')
     console.log(token)
   }
 
@@ -370,4 +373,4 @@ class WithData extends React.Component {
   }
 }
 
-export default WithData
+export default withRouter(WithData)

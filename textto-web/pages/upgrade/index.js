@@ -2,11 +2,13 @@ import React from 'react'
 import {
   Data
 } from '@corcos/components'
+import { withRouter } from 'next/router'
 
 import {
   Head,
   Navbar,
   Format,
+  Footer,
   Layout
 } from '../../components'
 
@@ -52,6 +54,7 @@ class Upgrade extends React.Component {
             }
           `}</style>
         </Layout>
+        <Footer />
       </Format>
     )
   }
@@ -77,4 +80,4 @@ class WithData extends React.Component {
   }
 }
 
-export default WithData
+export default withRouter(WithData)
