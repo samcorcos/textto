@@ -17,3 +17,9 @@ When a customer signs up for an account, they select a phone number from which t
 ```
 Receive SMS => Parsed by Twilio => Hit webhook => Send email to customer
 ```
+
+## TODO
+
+- [ ] set up subscription with stripe
+- [ ] allow people to unsubscribe
+- [ ] keep track of messages sent and time since subscription

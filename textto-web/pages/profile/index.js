@@ -60,6 +60,9 @@ class WithPhoneNumber extends React.Component {
         <div className='instructions' style={{ marginTop: 30 }}>
           Instructions
         </div>
+        <a style={{ marginBottom: 15 }} href='mailto:send@textto.net?subject=+14159385290, Sam Corcos&body=Hey Sam! This is an example text'>
+          Click here to send a demo text
+        </a>
         <div className='p'>
           This application uses the subject line of your email to determine who to send your SMS messages to.
         </div>
@@ -69,9 +72,7 @@ class WithPhoneNumber extends React.Component {
         <div className='p'>
           For example: <span className='code'>+14159385290, Sam Corcos</span>
         </div>
-        <a style={{ textAlign: 'center', marginBottom: 15 }} href='mailto:send@textto.net?subject=+14159385290, Sam Corcos&body=Hey Sam! This is an example text'>
-            Click here to send a demo text
-        </a>
+
         <div className='p'>
           Note that the phone number must be in the format <span className='code'>+14159385290</span>. The name is needed to make your emails easier to read and to keep your conversations threaded. The name comes after a comma.
         </div>
@@ -136,6 +137,7 @@ class WithPhoneNumber extends React.Component {
 
 class UpgradeHeader extends React.Component {
   render () {
+    if (this.props.user.active) return null
     return (
       <div className='container'>
         <div className='title col'>

@@ -85,6 +85,9 @@ module.exports.selectPhoneNumber = functions.https.onCall(async (data, context) 
     ... ]
   */
 
+  // TODO should probably check to make sure the account does not already have a phone number,
+  // otherwise they can just select a new phone number.
+
   if (!phoneNumber) {
     throw new functions.https.HttpsError('invalid-argument', 'Must include a phone number in your request.')
   }
@@ -105,7 +108,9 @@ module.exports.selectPhoneNumber = functions.https.onCall(async (data, context) 
       phone: purchasedNumber.phoneNumber,
       // NOTE this is a weird hack because Firestore thinks there is a constructor in the response
       // even though there is not.
-      purchasedNumber: JSON.parse(JSON.stringify(purchasedNumber))
+      purchasedNumber: JSON.parse(JSON.stringify(purchasedNumber)),
+      // the trial period starts once the phone number is activated
+      activationDate: new Date()
     }, { merge: true })
     return {
       message: 'Success!'
