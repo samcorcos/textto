@@ -83,7 +83,13 @@ const getAvailablePhoneNumbers = _.debounce(async (setState, areaCode) => {
     const { data } = await firebase.functions().httpsCallable('availablePhoneNumbers')({
       areaCode
     })
-    setState({ availablePhoneNumbers: data.availablePhoneNumbers })
+    if (!data.availablePhoneNumbers || data.availablePhoneNumbers.length < 1) {
+      // if there are no available phone numbers, show status
+      setState({ noneAvailable: `No ${areaCode} numbers available. Try another.` })
+    } else {
+      setState({ availablePhoneNumbers: data.availablePhoneNumbers })
+      setState({ noneAvailable: '' })
+    }
   } catch (err) {
     console.error(err)
   }
@@ -96,7 +102,8 @@ class SearchPhoneNumbers extends React.Component {
     this.state = {
       areaCode: '',
       loading: false,
-      availablePhoneNumbers: []
+      availablePhoneNumbers: [],
+      noneAvailable: ''
     }
   }
 
@@ -118,7 +125,8 @@ class SearchPhoneNumbers extends React.Component {
         <div style={{ width: 100 }}>
           <Input label='Area Code (e.g. 415)' onChange={v => this._handleChange(v)} value={this.state.areaCode} />
         </div>
-        {this.state.availablePhoneNumbers.map(p => <PhoneNumber phoneNumber={p} {...this.props} />)}
+        {this.state.noneAvailable && <div style={{ color: 'red' }}>{this.state.noneAvailable}</div>}
+        {this.state.availablePhoneNumbers.map(p => <PhoneNumber key={p.friendlyName} phoneNumber={p} {...this.props} />)}
       </div>
     )
   }
