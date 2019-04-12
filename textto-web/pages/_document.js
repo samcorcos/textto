@@ -13,6 +13,7 @@ export default class MyDocument extends Document {
           <link href='https://fonts.googleapis.com/css?family=Roboto:300,400,500,600' rel='stylesheet' />
         </Head>
         <body className='custom_class'>
+          <script src='https://js.stripe.com/v3/' />
           <Main />
           <NextScript />
         </body>

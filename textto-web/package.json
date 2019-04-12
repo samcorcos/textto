@@ -29,7 +29,7 @@
     "next": "^8.0.3",
     "react": "^16.8.4",
     "react-dom": "^16.8.4",
-    "react-stripe-elements": "^2.0.3"
+    "react-stripe-checkout": "^2.6.3"
   },
   "devDependencies": {
     "@zeit/webpack-asset-relocator-loader": "^0.1.x",

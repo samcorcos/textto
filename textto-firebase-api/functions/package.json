@@ -19,6 +19,7 @@
     "firestore-rest": "^1.0.2",
     "moment": "^2.24.0",
     "node-email-reply-parser": "^0.1.1",
+    "stripe": "^6.28.0",
     "twilio": "^3.30.0"
   },
   "devDependencies": {

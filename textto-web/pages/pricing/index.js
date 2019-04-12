@@ -2,16 +2,24 @@ import React from 'react'
 import {
   colors
 } from '@corcos/lib'
+import {
+  Data
+} from '@corcos/components'
 import Link from 'next/link'
+import StripeCheckout from 'react-stripe-checkout'
 
 import {
   Head,
   Navbar,
   Layout,
+  Loading,
   Footer,
   Button,
   Format
 } from '../../components'
+
+import Context from '../../lib/context'
+import { db, firebase } from '../../lib/firebase'
 
 const pricingData = [
   {
@@ -44,10 +52,59 @@ const pricingData = [
   }
 ]
 
-class PricingBox extends React.Component {
+const PricingButton = (props) => {
+  if (!props.user) {
+    // if there is no user signed in, direct them to the signup page
+    return (
+      <Link href='/profile'>
+        <Button title={`Get Started - $${props.pricePerMonth}`} onClick={() => {}} />
+      </Link>
+    )
+  }
+  if (!props.user.active && (props.title !== 'Free')) {
+    // if there is a user but that user is not active, show stripe checkout
+    return (
+      <StripeCheckout
+        email={props.user.email}
+        token={(t) => props._onToken(t)}
+        stripeKey={process.env.NODE_ENV === 'production' ? 'pk_live_C0kjiX1jMux2l16Jat7jfLDF00405qyRoc' : 'pk_test_4ycdFnKrp2rSb2sicmQAziFi00E2TT9frb'}>
+        <Button title={`Upgrade - $${props.pricePerMonth}`} onClick={() => {}} />
+      </StripeCheckout>
+    )
+  }
+  return (
+    <Link href='/profile'>
+      <Button title={`View Profile`} onClick={() => {}} />
+    </Link>
+  )
+}
+
+export class PricingBox extends React.Component {
+  constructor (props) {
+    super(props)
+    this.state = {
+      loading: false
+    }
+  }
+
+  _onToken = async (token) => {
+    this.setState({ loading: true })
+    try {
+      const res = await firebase.functions().httpsCallable('createSubscription')({
+        token
+      })
+      console.log(res)
+    } catch (err) {
+      console.error(err)
+    }
+    this.setState({ loading: false })
+    console.log(token)
+  }
+
   render () {
     return (
       <div className='card'>
+        {this.state.loading && <Loading />}
         <h2 className='title'>
           {this.props.title}
         </h2>
@@ -60,13 +117,11 @@ class PricingBox extends React.Component {
           <div className='line' />
           {this.props.features.map(f => {
             return (
-              <div className={`feature-title ${f.active ? '' : 'strike'}`}>{f.title}</div>
+              <div key={f.title} className={`feature-title ${f.active ? '' : 'strike'}`}>{f.title}</div>
             )
           })}
         </div>
-        <Link href='/profile'>
-          <Button title={`Get Started - $${this.props.pricePerMonth}`} onClick={() => {}} />
-        </Link>
+        <PricingButton {...this.props} _onToken={this._onToken} />
 
         <style jsx>{`
           .features {
@@ -143,7 +198,7 @@ class PriceRow extends React.Component {
         </h1>
         <div className='pricing-box-row'>
           {pricingData.map(d => {
-            return <PricingBox {...d} />
+            return <PricingBox key={d.title} {...d} {...this.props} />
           })}
         </div>
 
@@ -205,7 +260,7 @@ class Faq extends React.Component {
         <div className='accordion'>
           {faqData.map((d, i) => {
             return (
-              <div className='cell'>
+              <div className='cell' key={'accordion' + i}>
                 <div className='title-row' onClick={() => this.setState({ accordionIndex: this.state.accordionIndex === i ? null : i })}>
                   <div className='faq-title'>{d.title}</div>
                   <div className='arrow-container' onClick={() => this.setState({ accordionIndex: this.state.accordionIndex === i ? null : i })}>
@@ -256,7 +311,7 @@ class Faq extends React.Component {
             transition: all 0.3s ease;
           }
           .active {
-            max-height: 200px;
+            max-height: 400px;
           }
           .title-row {
             flex-direction: row;
@@ -295,4 +350,24 @@ class Pricing extends React.Component {
   }
 }
 
-export default Pricing
+class WithData extends React.Component {
+  static contextType = Context
+
+  render () {
+    if (!this.context.currentUser.uid) {
+      return <Pricing {...this.props} />
+    }
+    return (
+      <Data query={db.collection('users').doc(this.context.currentUser.uid)}>
+        {({ data: user, loading }) => {
+          if (loading) return <div>Loading...</div>
+          return (
+            <Pricing user={user} {...this.props} />
+          )
+        }}
+      </Data>
+    )
+  }
+}
+
+export default WithData
