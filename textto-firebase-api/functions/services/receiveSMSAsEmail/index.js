@@ -92,7 +92,9 @@ module.exports.receiveSMSAsEmail = functions.https.onRequest(async (request, res
   let person
   try {
     const result = await db.collection('users').doc(userId).collection('people').doc(from).get()
-    person = result.data()
+    if (result && result.data) {
+      person = result.data()
+    }
   } catch (err) {
     console.error(err)
   }
@@ -101,11 +103,11 @@ module.exports.receiveSMSAsEmail = functions.https.onRequest(async (request, res
   const body = decodeURIComponent(variables.Body.replace(/\+/g, ' '))
   console.info('body', body)
 
-  const content = body
+  const content = body || '<empty message>'
   const msg = {
     to: user.email,
-    from: `${person.recipientEmail}@textto.net`,
-    subject: `Re: ${from}, ${person.name}`,
+    from: `${(person && person.recipientEmail) || 'send'}@textto.net`,
+    subject: `Re: ${from}, ${(person && person.name) || '<No Name>'}`,
     text: content,
     html: content
   }
