@@ -61,6 +61,45 @@ class Badges extends React.Component {
   }
 }
 
+class OnYourOwnTime extends React.Component {
+  render () {
+    return (
+      <Layout>
+        <div className='container'>
+          <div className='title'>
+            Respond to text messages when it's convenient for you
+          </div>
+          <div className='subtitle'>
+            Send and receive text messages from your email inbox and manage them asynchronously, so you don't drop any balls.
+          </div>
+          <img className='image' src='https://firebasestorage.googleapis.com/v0/b/textto-189ae.appspot.com/o/Screen%20Shot%202019-04-18%20at%2012.44.59.png?alt=media&token=ae05436d-f6ae-410d-a46b-e225d4ae41f1' />
+        </div>
+
+        <style jsx>{`
+          .container {
+            align-items: center;
+          }
+          .image {
+            width: 80%;
+            box-shadow: 10px 10px 47px 0px rgba(0,0,0,0.28);
+            margin-bottom: 60px;
+          }
+          .title {
+            font-size: 32px;
+            text-align: center;
+          }
+          .subtitle {
+            margin-top: 15px;
+            color: ${colors.grey[600]};
+            text-align: center;
+            margin-bottom: 60px;
+          }
+        `}</style>
+      </Layout>
+    )
+  }
+}
+
 class Panes extends React.Component {
   render () {
     return (
@@ -162,6 +201,7 @@ class Home extends React.Component {
         <Navbar />
         <Landing {...this.props} />
         <Badges {...this.props} />
+        <OnYourOwnTime {...this.props} />
         <Panes {...this.props} />
         <Footer />
       </Format>
