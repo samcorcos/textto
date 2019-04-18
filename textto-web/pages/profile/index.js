@@ -173,17 +173,13 @@ class UpgradeHeader extends React.Component {
   }
 }
 
-class Profile extends React.Component {
+class CallForwarding extends React.Component {
   constructor (props) {
     super(props)
     this.state = {
       forwarding: Boolean(props.user.callForwardingPhone),
       callForwardingPhone: '+1'
     }
-  }
-
-  static getInitialProps = ({ query }) => {
-    return { query }
   }
 
   static contextType = Context
@@ -214,6 +210,50 @@ class Profile extends React.Component {
   }
 
   render () {
+    // if the user does not have a phone number, do not show them call forwarding
+    if (!this.props.user.phone) return null
+    return (
+      <div className='container' onClick={() => window.alert('You must upgrade to use call forwarding.')}>
+        <div>
+          Turn on Call Forwarding?
+        </div>
+        {!this.props.user.callForwardingPhone && <input checked={this.state.forwarding} onChange={() => this.setState({ forwarding: !this.state.forwarding })} type='checkbox' />}
+        {this.props.user.callForwardingPhone && <div style={{ marginLeft: 15 }}>{this.props.user.callForwardingPhone}</div>}
+        {this.state.forwarding && !this.props.user.callForwardingPhone && (
+          <>
+            <div className='row' style={{ alignItems: 'center', marginLeft: 15 }}>
+              <Input label='Must be in format: +14153882931' placeholder='E.g. +14154332443' onChange={v => this._handleChange(v)} value={this.state.callForwardingPhone} />
+              <div style={{ width: 15 }} />
+              <Button disabled={this.state.callForwardingPhone.length < 12} title='Submit' onClick={() => this._handleSubmit()} />
+            </div>
+          </>
+        )}
+
+        <style jsx>{`
+          .container {
+            opacity: ${this.props.user.active ? 1 : 0.5};
+            user-select: ${this.props.user.active ? 'auto' : 'none'};
+            flex-direction: row;
+            align-items: center;
+            margin-left: 30;
+            border: 1px solid ${colors.grey[200]};
+            border-radius: 3px;
+            padding: 10px;
+          }  
+        `}</style>
+      </div>
+    )
+  }
+}
+
+class Profile extends React.Component {
+  static getInitialProps = ({ query }) => {
+    return { query }
+  }
+
+  static contextType = Context
+
+  render () {
     return (
       <Format>
         <Head />
@@ -230,22 +270,7 @@ class Profile extends React.Component {
                 this.props.router.push('/')
               }}>Log out</a>
             </div>
-            <div style={{ flexDirection: 'row', alignItems: 'center', marginLeft: 30, border: `1px solid ${colors.grey[200]}`, borderRadius: 3, padding: 10 }}>
-              <div>
-                Call Forwarding?
-              </div>
-              {!this.props.user.callForwardingPhone && <input checked={this.state.forwarding} onChange={() => this.setState({ forwarding: !this.state.forwarding })} type='checkbox' />}
-              {this.props.user.callForwardingPhone && <div style={{ marginLeft: 15 }}>{this.props.user.callForwardingPhone}</div>}
-              {this.state.forwarding && !this.props.user.callForwardingPhone && (
-                <>
-                  <div className='row' style={{ alignItems: 'center', marginLeft: 15 }}>
-                    <Input label='Must be in format: +14153882931' placeholder='E.g. +14154332443' onChange={v => this._handleChange(v)} value={this.state.callForwardingPhone} />
-                    <div style={{ width: 15 }} />
-                    <Button disabled={this.state.callForwardingPhone.length < 12} title='Submit' onClick={() => this._handleSubmit()} />
-                  </div>
-                </>
-              )}
-            </div>
+            <CallForwarding {...this.props} />
           </div>
           <div>
             {this.props.user.phone

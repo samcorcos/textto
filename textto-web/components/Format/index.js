@@ -37,6 +37,7 @@ export default (props) => (
         font-size: 16px;
         line-height: 1.3em;
         font-family: Roboto, sans-serif;
+        color: ${colors.grey[800]};
       }
       a {
         color: ${colors.blue[500]};

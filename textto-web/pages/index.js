@@ -61,6 +61,57 @@ class Badges extends React.Component {
   }
 }
 
+class Panes extends React.Component {
+  render () {
+    return (
+      <Layout>
+        <div className='row pane-row'>
+          <div className='pane-text'>
+            <div className='pane-title'>
+              Use existing email tooling like Mixmax or Prospect
+            </div>
+            <div className='pane-description'>
+              You can send personalized messages to groups of people, as well as send automated followups if the person you're sending a text to has not responded within a certain amount of time.
+            </div>
+          </div>
+          <img className='image' src='https://firebasestorage.googleapis.com/v0/b/textto-189ae.appspot.com/o/Sequence%20-%20higher%20quality.gif?alt=media&token=c4358200-e297-45ac-afc6-898ba44531ad' />
+        </div>
+
+        <style jsx>{`
+          .pane-text {
+            flex: 1;
+            flex-shrink: 0;
+            padding: 30px;
+            justify-content: center;
+            padding-bottom: 100px;
+          }
+          .pane-title {
+            font-size: 24px;
+            color: ${colors.grey[800]};
+            margin-bottom: 20px;
+          }
+          .pane-description {
+            color: ${colors.grey[600]};
+            line-height: 24px;
+          }
+          .pane-row {
+            justify-content: space-between;
+          }
+          .image {
+            max-width: 633px;
+            max-height: 440px;
+            width: auto;
+            height: auto;
+            box-shadow: 10px 10px 47px 0px rgba(0,0,0,0.28);
+            border-radius: 5px;
+            max-width: 60%;
+          }  
+        `}</style>
+      </Layout>
+    )
+  }
+}
+
 class Landing extends React.Component {
   render () {
     return (
@@ -111,6 +162,7 @@ class Home extends React.Component {
         <Navbar />
         <Landing {...this.props} />
         <Badges {...this.props} />
+        <Panes {...this.props} />
         <Footer />
       </Format>
     )
