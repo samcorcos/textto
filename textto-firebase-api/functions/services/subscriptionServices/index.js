@@ -1,13 +1,10 @@
 const functions = require('firebase-functions')
 
-const { stripeSecretKey, stripeSecretKeyTest } = require('../../credentials/stripe')
-const stripeKey = (process.env.NODE_ENV === 'production') ? stripeSecretKey : stripeSecretKeyTest
-
-const stripe = require('stripe')(stripeKey)
-
+const { stripe } = require('./stripe')
 const { db } = require('../../lib/firebase')
 
 module.exports.createSubscription = functions.https.onCall(async (data, context) => {
+
   const { token } = data
   console.log('token', token)
 
@@ -20,41 +17,55 @@ module.exports.createSubscription = functions.https.onCall(async (data, context)
   // stripe.customers.retrieve(
   //   get customer_id if there is one
   // )
-
-  let customer
   try {
-    customer = await stripe.customers.create({
-      email: token.email,
-      source: token.id
-    })
-  } catch (err) {
-    console.error(err)
-  }
-  console.info('customer', customer)
-
-  let subscription
-  try {
-    subscription = await stripe.subscriptions.create({
-      customer: customer.id,
-      items: [{
-        plan: (process.env.NODE_ENV === 'production') ? 'plan_EsCKHPakXIbMRH' : 'plan_EsDW3DrAjKSWPa' // product id for TextTo.net Premium monthly
-      }]
-    })
-  } catch (err) {
-    console.error(err)
-  }
-  console.info('subscription', subscription)
-
-  // if the subscription succeeds, set the plan to active
-  if (subscription) {
-    try {
+    const userDoc = await db.collection('users').doc(context.auth.uid).get()
+    const user = userDoc.data()
+    let customer
+    if (!user.customerId) {
+      customer = await stripe.createCustomer(token.id, token.email)
+      console.info('customer', customer)
+    } else {
+      customer = await stripe.getCustomer(user.customerId)
+      console.info('customer', customer)
+    }
+    const subscription = await stripe.subscribe((process.env.NODE_ENV === 'production') ? 'plan_EsCKHPakXIbMRH' : 'plan_Eyd3d43vlPnTn3', customer.id)
+    console.info('subscription', subscription)
+    if (subscription) {
       await db.collection('users').doc(context.auth.uid).set({
         active: true,
         customerId: customer.id,
         subscriptionId: subscription.id
       }, { merge: true })
-    } catch (err) {
-      console.error(err)
+    }
+  } catch (err) {
+    console.error(err)
+    return {
+      message: 'Failed!',
+      err
+    }
+  }
+
+  return {
+    message: 'Success!'
+  }
+})
+
+module.exports.unsubscribe = functions.https.onCall(async (data, context) => {
+  try {
+    const userDoc = await db.collection('users').doc(context.auth.uid).get()
+    const user = userDoc.data()
+    if (user.active) {
+      await stripe.unsubscribe(user.subscriptionId)
+      await db.collection('users').doc(context.auth.uid).set({
+        active: false,
+        subscriptionId: null
+      }, { merge: true })
+    }
+  } catch (err) {
+    console.error(err)
+    return {
+      message: 'Failed!',
+      err
     }
   }
 
