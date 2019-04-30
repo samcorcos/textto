@@ -115,6 +115,19 @@ module.exports.receiveSMSAsEmail = functions.https.onRequest(async (request, res
   const result = await sgMail.send(msg)
   console.info('email result', result)
 
+  try {
+    if (user.active) {
+      await db.collection('events').add({
+        time: new Date(moment.utc().format()),
+        user: user.email,
+        sender: from,
+        event: 'RECEIVED'
+      })
+    }
+  } catch (err) {
+    console.error(err)
+  }
+
   return cors(request, response, () => {
     return response.status(200).contentType('text/html').send('<html><body>Success!</body></html>')
   })
