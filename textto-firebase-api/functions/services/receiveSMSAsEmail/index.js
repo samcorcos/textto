@@ -1,6 +1,7 @@
 require('dotenv').config()
 const functions = require('firebase-functions')
 const cors = require('cors')({ origin: true })
+const moment = require('moment')
 
 const { db } = require('../../lib/firebase')
 const { checkTrialPeriod } = require('../../lib/checkTrialPeriod.js')
