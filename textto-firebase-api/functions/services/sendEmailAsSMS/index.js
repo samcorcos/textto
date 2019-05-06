@@ -3,6 +3,7 @@ const { parser } = require('../../lib/parser')
 const functions = require('firebase-functions')
 const cors = require('cors')({ origin: true })
 var replyParser = require('node-email-reply-parser')
+const moment = require('moment')
 
 const { db } = require('../../lib/firebase')
 const { checkTrialPeriod } = require('../../lib/checkTrialPeriod.js')
@@ -147,6 +148,22 @@ module.exports.sendEmailAsSMS = functions.https.onRequest(async (request, respon
     await db.collection('users').doc(userId).set({
       messageCount: ((Number(messageCount) || 0) + 1)
     }, { merge: true })
+  } catch (err) {
+    console.error(err)
+  }
+
+  try {
+    if (user.active) {
+      await db.collection('events').add({
+        time: new Date(moment.utc().format()),
+        user: user.email,
+        recipient: {
+          email: recipientEmail,
+          phone: phone
+        },
+        event: 'SENT'
+      })
+    }
   } catch (err) {
     console.error(err)
   }

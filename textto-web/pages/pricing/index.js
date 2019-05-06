@@ -73,6 +73,11 @@ const PricingButton = (props) => {
       </StripeCheckout>
     )
   }
+  if (props.user.active && props.title !== 'Free') {
+    return (
+      <Button title={`Downgrade`} onClick={() => props._onDowngrade()} />
+    )
+  }
   return (
     <Link href='/profile'>
       <Button title={`View Profile`} onClick={() => {}} />
@@ -104,6 +109,18 @@ export class PricingBox extends React.Component {
     console.log(token)
   }
 
+  _onDowngrade = async () => {
+    this.setState({ loading: true })
+    try {
+      const res = await firebase.functions().httpsCallable('unsubscribe')()
+      console.log(res)
+    } catch (err) {
+      console.error(err)
+    }
+    this.setState({ loading: false })
+    this.props.router.push('/profile')
+  }
+
   render () {
     return (
       <div className='card'>
@@ -124,7 +141,7 @@ export class PricingBox extends React.Component {
             )
           })}
         </div>
-        <PricingButton {...this.props} _onToken={this._onToken} />
+        <PricingButton {...this.props} _onToken={this._onToken} _onDowngrade={this._onDowngrade} />
 
         <style jsx>{`
           .features {
