@@ -10,10 +10,6 @@ const { checkTrialPeriod } = require('../../lib/checkTrialPeriod.js')
 const sgMail = require('@sendgrid/mail')
 sgMail.setApiKey(process.env.SENDGRID_API_KEY)
 
-// NOTE this is the number for Evan Baehr
-// TODO this needs to be extracted into the database
-// const twilioNumber = '+15129602039'
-
 const client = require('twilio')(process.env.TWILIO_SID, process.env.TWILIO_AUTH_TOKEN)
 
 module.exports.sendEmailAsSMS = functions.https.onRequest(async (request, response) => {
